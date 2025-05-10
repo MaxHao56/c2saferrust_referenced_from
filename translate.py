@@ -36,6 +36,23 @@ def run_dataflow(code_dir, ofile_name):
         import pdb; pdb.set_trace()
     os.chdir(cwd)
 
+def extract_c_body(func, c_code_dir):
+    fpath = Path(os.path.join(c_code_dir, func['filename']))
+    start_line = func['startLine']
+    start_col = func['startCol']
+    end_line = func['endLine']
+    end_col = func['endCol']
+
+    with open(fpath, 'r') as f:
+        lines = f.readlines()
+    
+    body = lines[start_line-1][start_col-1:]
+    for i in range(start_line, end_line-1):
+        body += lines[i]
+    body += lines[end_line-1][:end_col]
+    return body
+
+
 def parse_span(span):
     # The span string looks like this: "src/xmalloc.rs:116:1: 125:2 (#0)"
     # We need to extract the file name, the line numbers, and the column numbers

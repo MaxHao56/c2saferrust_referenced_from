@@ -17,16 +17,18 @@ pub struct UnsafeCounter<'tcx> {
     pub unsafe_calls: Vec<Span>,
     pub unsafe_casts: Vec<Span>,
     pub inside_unsafe: bool,
+    pub selected_fns: Vec<String>,
 }
 
 impl<'tcx> UnsafeCounter<'tcx> {
-    pub fn new(tcx: &TyCtxt<'tcx>) -> UnsafeCounter<'tcx> {
+    pub fn new(tcx: &TyCtxt<'tcx>, selected_fns: Vec<String>) -> UnsafeCounter<'tcx> {
         UnsafeCounter{
             tcx: *tcx,
             unsafe_spans: Vec::new(),
             unsafe_calls: Vec::new(),
             unsafe_casts: Vec::new(),
             inside_unsafe: false,
+            selected_fns,
         }
     }
 }
@@ -44,6 +46,10 @@ impl<'tcx> intravisit::Visitor<'tcx> for UnsafeCounter<'tcx> {
         // Visit the item
         match &item.kind {
             rustc_hir::ItemKind::Fn(fn_sig, _, _) => {
+                // Check if name is in the selected functions
+                if !self.selected_fns.is_empty() && !self.selected_fns.contains(&item.ident.name.as_str().to_string()) {
+                    return;
+                }
                 if fn_sig.header.unsafety == rustc_hir::Unsafety::Unsafe {
                     // Add the entire function to the list of unsafe spans
                     self.unsafe_spans.push(item.span);

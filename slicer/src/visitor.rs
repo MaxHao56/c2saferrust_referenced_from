@@ -213,7 +213,6 @@ impl<'tcx> intravisit::Visitor<'tcx> for CallgraphVisitor<'tcx> {
             rustc_hir::ExprKind::Type(ref expr, ty) => {
                 if let Some(cur_fn_def_id) = self.cur_fn {
                     self.globals.entry(cur_fn_def_id).or_default().insert(ty.span);
-                    println!("HELLO! {}", span_to_string(self.tcx, &ty.span));
                 }
             },
             _ => {}

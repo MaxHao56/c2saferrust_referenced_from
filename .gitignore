@@ -1,5 +1,11 @@
+functions.json
+compile_commands.json
+
+*.a
+*.o
 .git
 
+build/
 debug/
 target/
 

@@ -98,14 +98,14 @@ if __name__ == "__main__":
             os.chdir(root_dir)
             os.chdir(original_subdir)
             try:
-                original_metrics = run('cargo metrics')
+                original_metrics = run('cargo metrics -- -Zselected-fns="../covered_funcs.txt"')
             except RuntimeError as e:
                 print(f"Error in {original_subdir}")
                 continue
             os.chdir(root_dir)
             os.chdir(translated_subdir)
             try:
-                translated_metrics = run('cargo metrics')
+                translated_metrics = run('cargo metrics -- -Zselected-fns="../covered_funcs.txt"')
             except RuntimeError as e:
                 print(f"Error in {translated_subdir}")
                 continue
@@ -120,14 +120,14 @@ if __name__ == "__main__":
                 continue
             os.chdir(nochunk_subdir)
             try:
-                nochunk_metrics = run('cargo metrics')
+                nochunk_metrics = run('cargo metrics -- -Zselected-fns="../covered_funcs.txt"')
             except RuntimeError as e:
                 print(f"Error in {nochunk_subdir}")
                 continue
             os.chdir(root_dir)
             os.chdir(random_subdir)
             try:
-                random_metrics = run('cargo metrics')
+                random_metrics = run('cargo metrics -- -Zselected-fns="../covered_funcs.txt"')
             except RuntimeError as e:
                 print(f"Error in {random_subdir}")
                 continue

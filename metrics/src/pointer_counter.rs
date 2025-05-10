@@ -18,15 +18,17 @@ pub struct PointerCounter<'tcx> {
     current_typeck: Option<&'tcx TypeckResults<'tcx>>,
     pub all_derefs: Vec<Span>,
     pub all_decls: Vec<Span>,
+    pub selected_fns: Vec<String>,
 }
 
 impl<'tcx> PointerCounter<'tcx> {
-    pub fn new(tcx: &TyCtxt<'tcx>) -> PointerCounter<'tcx> {
+    pub fn new(tcx: &TyCtxt<'tcx>, selected_fns: Vec<String>) -> PointerCounter<'tcx> {
         PointerCounter{
             tcx: *tcx,
             current_typeck: None,
             all_derefs: Vec::new(),
             all_decls: Vec::new(),
+            selected_fns,
         }
     }
 }
@@ -40,6 +42,13 @@ impl<'tcx> intravisit::Visitor<'tcx> for PointerCounter<'tcx> {
     }
     
     fn visit_item(&mut self, item: &'tcx rustc_hir::Item) {
+        
+        if let rustc_hir::ItemKind::Fn(..) = item.kind {
+            // Check if name is in the selected functions
+            if !self.selected_fns.is_empty() && !self.selected_fns.contains(&item.ident.name.as_str().to_string()) {
+                return;
+            }
+        }
         // skip_generated_code!(item.span);
         let old_typeck = self.current_typeck;
         if self.tcx.has_typeck_results(item.def_id) {

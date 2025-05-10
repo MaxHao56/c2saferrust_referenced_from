@@ -22,6 +22,7 @@ extern crate cargo_metadata;
 extern crate rand;
 extern crate itertools;
 
+use core::panic;
 use std::io::Write;
 
 use rustc_middle::ty::TyCtxt;
@@ -36,6 +37,19 @@ use utils::*;
 use unsafe_counter::UnsafeCounter;
 use pointer_counter::PointerCounter;
 use rustc_span::def_id::LOCAL_CRATE;
+
+#[derive(Debug, Clone)]
+pub struct MetricsConfig {
+    pub selected_fns: String,
+}
+
+impl Default for MetricsConfig {
+    fn default() -> Self {
+        MetricsConfig {
+            selected_fns: "".to_string(),
+        }
+    }
+}
 
 /// Returns the "default sysroot" that Metrics will use if no `--sysroot` flag is set.
 /// Should be a compile-time constant.
@@ -85,11 +99,24 @@ pub fn add_span_lengths(spans: &Vec<Span>, tcx: TyCtxt<'_>) -> u32 {
 
 }
 
-pub fn analyze(&tcx: &TyCtxt<'_>) {
+pub fn analyze(&tcx: &TyCtxt<'_>, config: MetricsConfig) {
+
+    let selected_fns: Vec<String> = if config.selected_fns == "" {
+        Vec::new()
+    } else {
+        match std::fs::read_to_string(&config.selected_fns) {
+            Ok(selected_fns) => {
+                selected_fns.lines().map(String::from).collect()
+            },
+            Err(_) => {
+                panic!("Could not read selected functions file");
+            },
+        }
+    };
     
     let hir_map = tcx.hir();
     let source_map = tcx.sess.source_map();
-    let mut unsafe_counter = UnsafeCounter::new(&tcx);
+    let mut unsafe_counter = UnsafeCounter::new(&tcx, selected_fns.clone());
     tcx.hir().visit_all_item_likes_in_crate(&mut unsafe_counter);
 
     let total_unsafe_spans = add_span_lengths(&unsafe_counter.unsafe_spans, tcx);
@@ -113,7 +140,7 @@ pub fn analyze(&tcx: &TyCtxt<'_>) {
     //     file.write(b"\n").unwrap();
     // }
 
-    let mut pointer_counter = PointerCounter::new(&tcx);
+    let mut pointer_counter = PointerCounter::new(&tcx, selected_fns.clone());
     tcx.hir().visit_all_item_likes_in_crate(&mut pointer_counter);
 
     println!("Raw pointer dereferences: {}", pointer_counter.all_derefs.len());

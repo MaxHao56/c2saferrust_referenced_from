@@ -87,6 +87,11 @@ print('''\\multicolumn{1}{lV{2}}{} &
   \\multicolumn{1}{l}{} \\bigstrut\\\\[-1.33em] \\hlineB{2}''')
 
 for program in data.keys():
+    
+    if 'original' not in data[program] or 'translated' not in data[program]:
+      print(f"Skipping {program} — missing 'original' or 'translated'")
+      continue
+    
     original = data[program]['original']
     translated = data[program]['translated']
 
